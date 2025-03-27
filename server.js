@@ -2,30 +2,29 @@ const express = require('express');
 const app = express();
 const { db, storage } = require('./firebase');
 const { getDoc, getDocs, deleteDoc, query, collection, doc, addDoc, updateDoc} = require("firebase/firestore");
+const cors = require('cors');
 
 app.use(express.json());
+app.use(cors({ origin: true }));
 
 //Aqui pega os clientes que temos
 app.get('/api/isLogged', async (req, res) => {
     console.log('Peguei todos os clientes!');
-        try {
-            const data = [];
-            const querySnap = await getDocs(
-                query(
-                    collection(db, "clientes"))
-                )
-            querySnap.forEach((doc) => {
-                console.log(doc.data())
-                data.push(doc.data());
-            });
-            return res.json(data);
-        } catch (error) {
-            console.error('Erro ao fazer a requisição:', error.message);
-            return null;
-        
+    try {
+        const data = [];
+        const querySnap = await getDocs(
+            query(
+                collection(db, "clientes"))
+            );
+        querySnap.forEach((doc) => {
+            data.push({ id: doc.id, ...doc.data() }); // Include the document ID
+        });
+        return res.json(data);
+    } catch (error) {
+        console.error('Erro ao fazer a requisição:', error.message);
+        return res.status(500).json({ error: "Erro ao buscar clientes" });
     }
-
-})
+});
 
 //Aqui deletamos um cliente passando seu ID
 app.delete('/api/clientes/:id', async (req, res) => {
@@ -95,7 +94,7 @@ app.put('/api/clientes/:id', async (req, res) => {
 
 
 
-const port = process.env.PORT || 621;
+const port = process.env.PORT || 3001;
 const server = app.listen(port, () => {
     console.log('Nossa API roda na porta ' + port);
 });
